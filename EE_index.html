@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Control de Energia Electrica</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Control administrativo</p>
+        <h1>Energia electrica</h1>
+      </div>
+      <div class="top-actions">
+        <button class="icon-button" id="exportJsonBtn" type="button" aria-label="Descargar respaldo JSON" data-tooltip="Descargar respaldo">
+          <i data-lucide="database-backup"></i>
+        </button>
+        <label class="icon-button file-action" aria-label="Importar respaldo JSON" data-tooltip="Importar respaldo">
+          <i data-lucide="upload"></i>
+          <input id="importJsonInput" type="file" accept="application/json" />
+        </label>
+        <button class="primary-action" id="newReceiptBtn" type="button">
+          <i data-lucide="plus"></i>
+          Nuevo recibo
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="summary-grid" aria-label="Resumen general">
+        <article>
+          <span>Registrado</span>
+          <strong id="totalRegistered">$0.00</strong>
+        </article>
+        <article>
+          <span>Pagado</span>
+          <strong id="totalPaid">$0.00</strong>
+        </article>
+        <article>
+          <span>Pendiente</span>
+          <strong id="totalPending">$0.00</strong>
+        </article>
+        <article>
+          <span>Alertas</span>
+          <strong id="totalAlerts">0</strong>
+        </article>
+      </section>
+
+      <nav class="tabs" aria-label="Secciones">
+        <button class="tab active" type="button" data-view="recordsView"><i data-lucide="receipt-text"></i> Recibos</button>
+        <button class="tab" type="button" data-view="compareView"><i data-lucide="chart-no-axes-combined"></i> Comparativos</button>
+        <button class="tab" type="button" data-view="lettersView"><i data-lucide="send"></i> Oficios</button>
+        <button class="tab" type="button" data-view="reportsView"><i data-lucide="file-spreadsheet"></i> Reportes</button>
+      </nav>
+
+      <section id="recordsView" class="view active">
+        <div class="workspace">
+          <aside class="panel form-panel">
+            <div class="panel-heading">
+              <h2 id="formTitle">Nuevo recibo</h2>
+              <button class="icon-button ghost" id="clearFormBtn" type="button" aria-label="Limpiar formulario" data-tooltip="Limpiar">
+                <i data-lucide="eraser"></i>
+              </button>
+            </div>
+            <form id="receiptForm" autocomplete="off">
+              <input id="receiptId" type="hidden" />
+              <label>
+                Unidad ejecutora
+                <select id="executingUnit" required></select>
+              </label>
+              <label>
+                No. de cuenta
+                <select id="accountNumber" required></select>
+              </label>
+              <div class="two-col">
+                <label>
+                  No. de medidor
+                  <input id="meterNumber" required readonly placeholder="190F9W" />
+                </label>
+                <label>
+                  Área de adscripción
+                  <select id="area" required></select>
+                </label>
+              </div>
+              <div class="two-col">
+                <label>
+                  Inicio periodo
+                  <input id="periodStart" required type="date" />
+                </label>
+                <label>
+                  Fin periodo
+                  <input id="periodEnd" required type="date" />
+                </label>
+              </div>
+              <div class="two-col">
+                <label>
+                  Importe
+                  <input id="amount" required type="number" step="0.01" min="0" placeholder="2736.00" />
+                </label>
+                <label>
+                  Estatus
+                  <select id="status">
+                    <option value="revision">En revision</option>
+                    <option value="pagado">Pagado</option>
+                    <option value="pendiente">Pendiente</option>
+                    <option value="observado">Observado</option>
+                  </select>
+                </label>
+              </div>
+              <div class="two-col">
+                <label>
+                  Fecha de pago
+                  <input id="paymentDate" type="date" />
+                </label>
+                <label>
+                  Folio / referencia
+                  <input id="paymentReference" placeholder="Referencia de pago" />
+                </label>
+              </div>
+              <label>
+                Soporte fisico
+                <input id="supportLocation" placeholder="Caja, folder, expediente o archivo" />
+              </label>
+              <label>
+                Observaciones
+                <textarea id="notes" rows="4" placeholder="Ej. verificar pago previo, diferencia en importe, recibo repetido"></textarea>
+              </label>
+              <button class="submit-button" type="submit">
+                <i data-lucide="save"></i>
+                Guardar recibo
+              </button>
+            </form>
+          </aside>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <h2>Registro de recibos</h2>
+                <p id="recordCount">0 registros</p>
+              </div>
+              <div class="toolbar">
+                <div class="search-box">
+                  <i data-lucide="search"></i>
+                  <input id="searchInput" placeholder="Buscar unidad, cuenta, medidor, área..." />
+                </div>
+                <select id="statusFilter" aria-label="Filtrar por estatus">
+                  <option value="all">Todos</option>
+                  <option value="revision">En revision</option>
+                  <option value="pagado">Pagado</option>
+                  <option value="pendiente">Pendiente</option>
+                  <option value="observado">Observado</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>No.</th>
+                    <th>Unidad ejecutora</th>
+                    <th>Cuenta</th>
+                    <th>Medidor</th>
+                    <th>Periodo</th>
+                    <th>Área</th>
+                    <th>Importe</th>
+                    <th>Estatus</th>
+                    <th>Alertas</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="recordsBody"></tbody>
+              </table>
+            </div>
+            <div id="emptyRecords" class="empty-state">
+              <i data-lucide="clipboard-plus"></i>
+              <h3>Empieza con el primer recibo</h3>
+              <p>Selecciona unidad ejecutora, cuenta, medidor, área e importe.</p>
+              <button class="primary-action" id="emptyNewBtn" type="button"><i data-lucide="plus"></i> Capturar recibo</button>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="compareView" class="view">
+        <div class="panel">
+          <div class="panel-heading">
+            <div>
+              <h2>Verificador de recibos</h2>
+              <p>Consulta si una cuenta, periodo e importe ya fueron capturados antes de registrar otro recibo.</p>
+            </div>
+          </div>
+          <div class="verify-layout">
+            <form id="verifyForm" class="verify-form" autocomplete="off">
+              <label>
+                No. de cuenta
+                <input id="verifyAccount" required inputmode="numeric" placeholder="333000105723" />
+              </label>
+              <div class="two-col">
+                <label>
+                  Inicio periodo
+                  <input id="verifyStart" required type="date" />
+                </label>
+                <label>
+                  Fin periodo
+                  <input id="verifyEnd" required type="date" />
+                </label>
+              </div>
+              <label>
+                Importe
+                <input id="verifyAmount" required type="number" step="0.01" min="0" placeholder="2736.00" />
+              </label>
+              <div class="verify-actions">
+                <button class="submit-button" type="submit"><i data-lucide="search"></i> Revisar recibo</button>
+                <button class="text-button" id="useReceiptFormBtn" type="button">Usar datos del formulario</button>
+              </div>
+            </form>
+            <div class="verification-result" id="verificationResult">
+              <i data-lucide="search"></i>
+              <strong>Sin busqueda activa</strong>
+              <span>Ingresa los datos del recibo para revisar coincidencias.</span>
+            </div>
+          </div>
+          <div class="table-wrap compact">
+            <table>
+              <thead>
+                <tr>
+                  <th>Riesgo</th>
+                  <th>Cuenta</th>
+                  <th>Periodo</th>
+                  <th>Área</th>
+                  <th>Importe</th>
+                  <th>Estatus</th>
+                  <th>Coincidencia</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="verificationBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="lettersView" class="view">
+        <div class="workspace">
+          <aside class="panel form-panel">
+            <div class="panel-heading">
+              <h2 id="letterFormTitle">Nuevo oficio</h2>
+              <button class="icon-button ghost" id="clearLetterBtn" type="button" aria-label="Limpiar oficio" data-tooltip="Limpiar">
+                <i data-lucide="eraser"></i>
+              </button>
+            </div>
+            <form id="letterForm" autocomplete="off">
+              <input id="letterId" type="hidden" />
+              <label>
+                Numero de oficio
+                <input id="letterNumber" required placeholder="DG/001/2026" />
+              </label>
+              <label>
+                Fecha de envio
+                <input id="letterDate" required type="date" />
+              </label>
+              <label>
+                Destinatario
+                <input id="recipient" required placeholder="Unidad administrativa" />
+              </label>
+              <label>
+                Área relacionada
+                <input id="letterArea" placeholder="Área o varias áreas" />
+              </label>
+              <label>
+                Periodo relacionado
+                <input id="letterPeriod" placeholder="31-03-26 al 30-04-26" />
+              </label>
+              <div class="linked-records">
+                <div class="linked-heading">
+                  <span>Recibos ligados</span>
+                  <button class="text-button" id="suggestLinksBtn" type="button">Sugerir</button>
+                </div>
+                <div id="linkedReceiptsList" class="check-list"></div>
+              </div>
+              <div class="two-col">
+                <label>
+                  Total enviado
+                  <input id="letterAmount" type="number" step="0.01" min="0" />
+                </label>
+                <label>
+                  Estatus
+                  <select id="letterStatus">
+                    <option value="enviado">Enviado</option>
+                    <option value="recibido">Recibido</option>
+                    <option value="pendiente">Pendiente</option>
+                    <option value="cancelado">Cancelado</option>
+                  </select>
+                </label>
+              </div>
+              <label>
+                Soporte / acuse
+                <input id="letterSupport" placeholder="Ubicacion del acuse fisico o digital" />
+              </label>
+              <label>
+                Oficio PDF
+                <input id="letterPdf" type="file" accept="application/pdf" />
+              </label>
+              <div id="letterPdfStatus" class="attachment-status"></div>
+              <label>
+                Notas
+                <textarea id="letterNotes" rows="4" placeholder="Recibos incluidos, observaciones o seguimiento"></textarea>
+              </label>
+              <button class="submit-button" type="submit">
+                <i data-lucide="send"></i>
+                Guardar oficio
+              </button>
+            </form>
+          </aside>
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <h2>Oficios enviados</h2>
+                <p id="letterCount">0 oficios</p>
+              </div>
+              <div class="search-box">
+                <i data-lucide="search"></i>
+                <input id="letterSearch" placeholder="Buscar oficio, destinatario, área..." />
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Oficio</th>
+                    <th>Fecha</th>
+                    <th>Destinatario</th>
+                    <th>Área / periodo</th>
+                    <th>Total</th>
+                    <th>Estatus</th>
+                    <th>Documento</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="lettersBody"></tbody>
+              </table>
+            </div>
+            <div id="emptyLetters" class="empty-state">
+              <i data-lucide="mail-plus"></i>
+              <h3>Registra tus oficios</h3>
+              <p>Conserva numero, fecha, destinatario, soporte y monto relacionado.</p>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="reportsView" class="view">
+        <div class="panel">
+          <div class="panel-heading">
+            <div>
+              <h2>Reportes y soporte</h2>
+              <p>Filtra por área, fechas o estatus y descarga lo que necesitas entregar.</p>
+            </div>
+            <div class="toolbar">
+              <button class="icon-button" id="downloadCsvBtn" type="button" aria-label="Descargar CSV" data-tooltip="Descargar CSV">
+                <i data-lucide="file-down"></i>
+              </button>
+              <button class="icon-button" id="printReportBtn" type="button" aria-label="Imprimir reporte" data-tooltip="Imprimir">
+                <i data-lucide="printer"></i>
+              </button>
+            </div>
+          </div>
+          <div class="filters">
+            <label>
+              Unidad ejecutora
+              <select id="reportUnit"></select>
+            </label>
+            <label>
+              Área
+              <select id="reportArea"></select>
+            </label>
+            <label>
+              Desde
+              <input id="reportFrom" type="date" />
+            </label>
+            <label>
+              Hasta
+              <input id="reportTo" type="date" />
+            </label>
+            <label>
+              Estatus
+              <select id="reportStatus">
+                <option value="all">Todos</option>
+                <option value="revision">En revision</option>
+                <option value="pagado">Pagado</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="observado">Observado</option>
+              </select>
+            </label>
+          </div>
+          <div class="report-total">
+            <span>Total del reporte</span>
+            <strong id="reportTotal">$0.00</strong>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Cuenta</th>
+                  <th>Unidad ejecutora</th>
+                  <th>Medidor</th>
+                  <th>Periodo</th>
+                  <th>Área</th>
+                  <th>Importe</th>
+                  <th>Estatus</th>
+                  <th>Soporte</th>
+                </tr>
+              </thead>
+              <tbody id="reportBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <template id="rowActionsTemplate">
+      <div class="row-actions">
+        <button class="icon-button ghost edit-row" type="button" aria-label="Editar" data-tooltip="Editar"><i data-lucide="pencil"></i></button>
+        <button class="icon-button ghost delete-row" type="button" aria-label="Eliminar" data-tooltip="Eliminar"><i data-lucide="trash-2"></i></button>
+      </div>
+    </template>
+
+    <script src="icons.js?v=12"></script>
+    <script src="app.js?v=12"></script>
+  </body>
+</html>
