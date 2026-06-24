@@ -4,7 +4,727 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Control de Energia Electrica</title>
-    <link rel="stylesheet" href="styles.css" />
+    <style>
+:root {
+  color-scheme: light;
+  --bg: #f6f7f4;
+  --surface: #ffffff;
+  --surface-2: #eef4ef;
+  --ink: #17201b;
+  --muted: #627067;
+  --line: #d8dfd8;
+  --accent: #146c5f;
+  --accent-2: #c87829;
+  --danger: #b42318;
+  --warn: #9a6700;
+  --ok: #1d7f45;
+  --shadow: 0 18px 45px rgba(28, 40, 32, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px clamp(18px, 4vw, 44px);
+  border-bottom: 1px solid var(--line);
+  background: rgba(246, 247, 244, 0.94);
+  backdrop-filter: blur(18px);
+}
+
+.eyebrow {
+  margin: 0 0 2px;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 0;
+  font-size: clamp(1.65rem, 4vw, 2.55rem);
+  line-height: 1.05;
+}
+
+h2 {
+  margin-bottom: 4px;
+  font-size: 1.08rem;
+}
+
+h3 {
+  margin-bottom: 8px;
+}
+
+main {
+  width: min(1480px, calc(100% - 28px));
+  margin: 22px auto 54px;
+}
+
+.top-actions,
+.toolbar,
+.tabs,
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.primary-action,
+.submit-button,
+.tab,
+.icon-button {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  min-height: 42px;
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.primary-action,
+.submit-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  background: var(--accent);
+  color: white;
+  font-weight: 800;
+}
+
+.text-button {
+  min-height: 30px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 8px;
+  background: #e7f2ef;
+  color: var(--accent);
+  font-weight: 900;
+}
+
+.submit-button {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.icon-button {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.icon-button.ghost {
+  background: transparent;
+}
+
+.icon-button:hover,
+.primary-action:hover,
+.submit-button:hover,
+.tab:hover {
+  transform: translateY(-1px);
+  border-color: rgba(20, 108, 95, 0.35);
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  right: 0;
+  bottom: -34px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-3px);
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: #1d2a23;
+  color: white;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+[data-tooltip]:hover::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.file-action input {
+  display: none;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.summary-grid article,
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.summary-grid article {
+  padding: 16px;
+}
+
+.summary-grid span,
+.panel-heading p,
+.empty-state p {
+  color: var(--muted);
+}
+
+.summary-grid strong {
+  display: block;
+  margin-top: 8px;
+  font-size: clamp(1.3rem, 3vw, 2rem);
+}
+
+.tabs {
+  margin: 18px 0;
+  flex-wrap: wrap;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  background: transparent;
+  color: var(--muted);
+  border-color: var(--line);
+  font-weight: 800;
+}
+
+.tab.active {
+  background: #17352f;
+  color: white;
+}
+
+.view {
+  display: none;
+}
+
+.view.active {
+  display: block;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(320px, 390px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.panel {
+  min-width: 0;
+  padding: 18px;
+}
+
+.form-panel {
+  position: sticky;
+  top: 104px;
+}
+
+.panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+form {
+  display: grid;
+  gap: 12px;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  color: #33423a;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 11px;
+  background: #fbfcfa;
+  color: var(--ink);
+}
+
+select {
+  text-overflow: ellipsis;
+}
+
+textarea {
+  resize: vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 3px solid rgba(20, 108, 95, 0.16);
+  border-color: var(--accent);
+}
+
+.two-col,
+.filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.filters {
+  grid-template-columns: 1.4fr 1.3fr repeat(3, minmax(130px, 1fr));
+  margin-bottom: 14px;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: min(360px, 100%);
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 10px;
+  background: #fbfcfa;
+}
+
+.search-box input {
+  min-height: auto;
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.search-box input:focus {
+  outline: 0;
+}
+
+.linked-records {
+  display: grid;
+  gap: 8px;
+}
+
+.linked-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #33423a;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.check-list {
+  display: grid;
+  gap: 7px;
+  max-height: 170px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  background: #fbfcfa;
+}
+
+.check-list label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 7px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.check-list label:hover {
+  background: #eef4ef;
+}
+
+.check-list input {
+  width: 16px;
+  min-height: 16px;
+  margin-top: 2px;
+}
+
+.check-list small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.attachment-status {
+  display: none;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 10px;
+  background: #f7fbf8;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.attachment-status.active {
+  display: flex;
+}
+
+.document-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.table-wrap {
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 12px 11px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface-2);
+  color: #3c4c42;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+tbody tr:hover {
+  background: #fbf5ee;
+}
+
+.amount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.badge.pagado,
+.badge.recibido {
+  background: #e5f6ea;
+  color: var(--ok);
+}
+
+.badge.pendiente,
+.badge.revision,
+.badge.enviado {
+  background: #fff1d6;
+  color: var(--warn);
+}
+
+.badge.observado,
+.badge.cancelado {
+  background: #fde8e6;
+  color: var(--danger);
+}
+
+.alert-list {
+  display: grid;
+  gap: 5px;
+}
+
+.alert-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--danger);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.empty-state {
+  display: none;
+  place-items: center;
+  padding: 48px 16px;
+  text-align: center;
+}
+
+.empty-state.active {
+  display: grid;
+}
+
+.empty-state svg {
+  width: 46px;
+  height: 46px;
+  color: var(--accent);
+}
+
+.compare-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(260px, 0.7fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.verify-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 420px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: stretch;
+  margin-bottom: 16px;
+}
+
+.verify-form {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: #fbfcfa;
+}
+
+.verify-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.verification-result {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 8px;
+  min-height: 220px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 20px;
+  background: #f7fbf8;
+}
+
+.verification-result svg {
+  width: 34px;
+  height: 34px;
+  color: var(--accent);
+}
+
+.verification-result strong {
+  font-size: 1.35rem;
+}
+
+.verification-result span {
+  color: var(--muted);
+}
+
+.verification-result.danger {
+  border-color: rgba(180, 35, 24, 0.3);
+  background: #fff1ef;
+}
+
+.verification-result.warn {
+  border-color: rgba(154, 103, 0, 0.3);
+  background: #fff8ed;
+}
+
+.verification-result.ok {
+  border-color: rgba(29, 127, 69, 0.3);
+  background: #eefaf1;
+}
+
+.chart-panel {
+  min-height: 330px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: #fbfcfa;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.insights {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.insight {
+  border-left: 4px solid var(--accent-2);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff8ed;
+}
+
+.insight.danger {
+  border-left-color: var(--danger);
+  background: #fff1ef;
+}
+
+.insight strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.compact table {
+  min-width: 720px;
+}
+
+.report-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  border-radius: 8px;
+  padding: 14px 16px;
+  background: #17352f;
+  color: white;
+}
+
+.report-total strong {
+  font-size: 1.5rem;
+}
+
+@media (max-width: 1060px) {
+  .workspace,
+  .compare-grid,
+  .verify-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .form-panel {
+    position: static;
+  }
+}
+
+@media (max-width: 760px) {
+  .topbar,
+  .panel-heading,
+  .toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .top-actions,
+  .toolbar {
+    width: 100%;
+  }
+
+  .primary-action {
+    flex: 1;
+  }
+
+  .summary-grid,
+  .two-col,
+  .filters {
+    grid-template-columns: 1fr;
+  }
+
+  .search-box {
+    min-width: 100%;
+  }
+}
+
+@media print {
+  .topbar,
+  .tabs,
+  .form-panel,
+  .toolbar,
+  .icon-button,
+  .primary-action {
+    display: none !important;
+  }
+
+  body {
+    background: white;
+  }
+
+  main {
+    width: 100%;
+    margin: 0;
+  }
+
+  .view {
+    display: none !important;
+  }
+
+  #reportsView {
+    display: block !important;
+  }
+
+  .panel {
+    box-shadow: none;
+    border: 0;
+  }
+}
+    </style>
   </head>
   <body>
     <header class="topbar">
@@ -425,8 +1145,1031 @@
         <button class="icon-button ghost delete-row" type="button" aria-label="Eliminar" data-tooltip="Eliminar"><i data-lucide="trash-2"></i></button>
       </div>
     </template>
+    <script>
+(function () {
+  const icons = {
+    "database-backup": '<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3h1"/><path d="M18 15v6"/><path d="m15 18 3-3 3 3"/>',
+    upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>',
+    plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+    "receipt-text": '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M8 7h8"/><path d="M8 11h8"/><path d="M8 15h5"/>',
+    "chart-no-axes-combined": '<path d="M12 16v5"/><path d="M16 14v7"/><path d="M20 10v11"/><path d="m22 3-8.5 8.5-5-5L2 13"/>',
+    send: '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+    "file-spreadsheet": '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h8"/><path d="M10 9H8"/>',
+    eraser: '<path d="m7 21-4-4 9.5-9.5 4 4L7 21Z"/><path d="M14.5 5.5 18 2l4 4-3.5 3.5"/><path d="M12 21h9"/>',
+    save: '<path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/>',
+    search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    "clipboard-plus": '<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 14h6"/><path d="M12 11v6"/>',
+    "circle-check": '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+    "mail-plus": '<path d="M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h8"/><path d="m22 7-8.97 5.7a2 2 0 0 1-2.06 0L2 7"/><path d="M19 16v6"/><path d="M16 19h6"/>',
+    "file-down": '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/>',
+    "file-text": '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>',
+    eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+    printer: '<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6Z"/>',
+    pencil: '<path d="M21.2 6.8 17.2 2.8a2 2 0 0 0-2.8 0L3 14.2V21h6.8L21.2 9.6a2 2 0 0 0 0-2.8Z"/><path d="m14 5 5 5"/>',
+    "trash-2": '<path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>',
+    "triangle-alert": '<path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>'
+  };
 
-    <script src="icons.js?v=12"></script>
-    <script src="app.js?v=12"></script>
+  window.lucide = {
+    createIcons() {
+      document.querySelectorAll("i[data-lucide]").forEach((node) => {
+        const name = node.dataset.lucide;
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("width", "18");
+        svg.setAttribute("height", "18");
+        svg.setAttribute("fill", "none");
+        svg.setAttribute("stroke", "currentColor");
+        svg.setAttribute("stroke-width", "2");
+        svg.setAttribute("stroke-linecap", "round");
+        svg.setAttribute("stroke-linejoin", "round");
+        svg.setAttribute("aria-hidden", "true");
+        svg.innerHTML = icons[name] || icons.search;
+        node.replaceWith(svg);
+      });
+    }
+  };
+})();
+    </script>
+    <script>
+(function () {
+'use strict';
+const STORAGE_KEY = "energia-electrica-control-v2";
+const EXECUTING_UNITS = [
+  {
+    name: "Unidad de Apoyo a la Administración General",
+    accounts: [
+      { accountNumber: "974910900425", meterNumber: "275BWC", area: "Oficina del C. Jefe de la Unidad (Explanada)" },
+      { accountNumber: "332010600858", meterNumber: "K979JK", area: "Coordinación de Administración" },
+      { accountNumber: "334120912556", meterNumber: "WF342L", area: "Coordinación de Administración" },
+      { accountNumber: "334121006800", meterNumber: "52N55H", area: "Coordinación de Administración" },
+      { accountNumber: "333941001725", meterNumber: "104XGW", area: "Coordinación de Administración (305 y 311)" },
+      { accountNumber: "334190900717", meterNumber: "G779JJ", area: "Coordinación de Administración (305)" },
+      { accountNumber: "334200203351", meterNumber: "Y780PE", area: "Coordinación de Administración (Estacionamiento)" },
+      { accountNumber: "334130500477", meterNumber: "105JUD", area: "Coordinación de Asuntos Internacionales" },
+      { accountNumber: "147990603511", meterNumber: "J519BV", area: "Coordinación de Asuntos Internacionales (Hamburgo)" }
+    ]
+  },
+  {
+    name: "Gubernatura",
+    accounts: [
+      { accountNumber: "333000105723", meterNumber: "190F9W", area: "Gubernatura" },
+      { accountNumber: "333000105723", meterNumber: "190F9W", area: "UAAG" }
+    ]
+  },
+  {
+    name: "Vocería de la Gubernatura",
+    accounts: [{ accountNumber: "333000105723", meterNumber: "190F9W", area: "Vocería de la Gubernatura" }]
+  }
+];
+
+const UNIT_BY_NAME = new Map(EXECUTING_UNITS.map((unit) => [unit.name, unit]));
+const CATALOG_ACCOUNTS = EXECUTING_UNITS.flatMap((unit) => unit.accounts.map((account) => ({ ...account, executingUnit: unit.name })));
+
+const demoRecords = [
+  {
+    id: crypto.randomUUID(),
+    executingUnit: "Vocería de la Gubernatura",
+    accountNumber: "333000105723",
+    meterNumber: "190F9W",
+    periodStart: "2026-03-31",
+    periodEnd: "2026-04-30",
+    area: "Vocería de la Gubernatura",
+    amount: 2736,
+    status: "revision",
+    paymentDate: "",
+    paymentReference: "",
+    supportLocation: "Relacion fisica pendiente de clasificar",
+    notes: "Registro inicial tomado de la imagen de referencia.",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
+
+const state = loadState();
+let pendingPdfRemoval = false;
+
+const $ = (selector) => document.querySelector(selector);
+const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+const money = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
+const shortDate = new Intl.DateTimeFormat("es-MX", { day: "2-digit", month: "2-digit", year: "2-digit" });
+const pdfDb = openPdfDb();
+
+function loadState() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) {
+    return { records: demoRecords, letters: [] };
+  }
+
+  try {
+    const parsed = JSON.parse(saved);
+    return {
+      records: Array.isArray(parsed.records) ? parsed.records.map(hydrateRecord) : demoRecords,
+      letters: Array.isArray(parsed.letters) ? parsed.letters : []
+    };
+  } catch {
+    return { records: demoRecords, letters: [] };
+  }
+}
+
+function hydrateRecord(record) {
+  const catalog = findCatalogAccount(record.accountNumber, record.area, record.executingUnit);
+  return {
+    ...record,
+    executingUnit: catalog?.executingUnit || record.executingUnit || "Vocería de la Gubernatura",
+    meterNumber: record.meterNumber || catalog?.meterNumber || "",
+    area: catalog?.area || record.area
+  };
+}
+
+function findCatalogAccount(accountNumber, area = "", executingUnit = "") {
+  return CATALOG_ACCOUNTS.find(
+    (item) =>
+      normalize(item.accountNumber) === normalize(accountNumber) &&
+      (!executingUnit || normalize(item.executingUnit) === normalize(executingUnit)) &&
+      (!area || normalize(item.area) === normalize(area))
+  )
+    || CATALOG_ACCOUNTS.find(
+      (item) => normalize(item.accountNumber) === normalize(accountNumber) && (!executingUnit || normalize(item.executingUnit) === normalize(executingUnit))
+    )
+    || CATALOG_ACCOUNTS.find((item) => normalize(item.accountNumber) === normalize(accountNumber));
+}
+
+function persist() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function openPdfDb() {
+  return new Promise((resolve, reject) => {
+    if (typeof indexedDB === "undefined") {
+      resolve(null);
+      return;
+    }
+    const request = indexedDB.open("energia-electrica-pdfs", 1);
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore("pdfs", { keyPath: "id" });
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => resolve(null);
+    request.onblocked = () => resolve(null);
+  });
+}
+
+async function savePdfAttachment(file, previousId = "") {
+  if (!file) return null;
+  if (file.type !== "application/pdf") {
+    throw new Error("Solo se permiten archivos PDF.");
+  }
+  if (file.size > 12 * 1024 * 1024) {
+    throw new Error("El PDF rebasa 12 MB. Conviene comprimirlo antes de adjuntarlo.");
+  }
+
+  const db = await pdfDb;
+  const attachment = {
+    id: crypto.randomUUID(),
+    name: file.name,
+    type: file.type,
+    size: file.size,
+    uploadedAt: new Date().toISOString(),
+    blob: file
+  };
+  if (db) {
+    await idbPut(db, "pdfs", attachment);
+    if (previousId) await idbDelete(db, "pdfs", previousId);
+  } else {
+    const dataUrl = await fileToDataUrl(file);
+    localStorage.setItem(`pdf-${attachment.id}`, dataUrl);
+    if (previousId) localStorage.removeItem(`pdf-${previousId}`);
+  }
+  return {
+    id: attachment.id,
+    name: attachment.name,
+    type: attachment.type,
+    size: attachment.size,
+    uploadedAt: attachment.uploadedAt
+  };
+}
+
+async function getPdfAttachment(id) {
+  if (!id) return null;
+  const db = await pdfDb;
+  if (db) return idbGet(db, "pdfs", id);
+  const dataUrl = localStorage.getItem(`pdf-${id}`);
+  return dataUrl ? { id, dataUrl } : null;
+}
+
+async function deletePdfAttachment(id) {
+  if (!id) return;
+  const db = await pdfDb;
+  if (db) await idbDelete(db, "pdfs", id);
+  else localStorage.removeItem(`pdf-${id}`);
+}
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+function idbGet(db, store, key) {
+  return new Promise((resolve, reject) => {
+    const request = db.transaction(store, "readonly").objectStore(store).get(key);
+    request.onsuccess = () => resolve(request.result || null);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function idbPut(db, store, value) {
+  return new Promise((resolve, reject) => {
+    const request = db.transaction(store, "readwrite").objectStore(store).put(value);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function idbDelete(db, store, key) {
+  return new Promise((resolve, reject) => {
+    const request = db.transaction(store, "readwrite").objectStore(store).delete(key);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function formatPeriod(record) {
+  return `${formatDate(record.periodStart)} al ${formatDate(record.periodEnd)}`;
+}
+
+function formatDate(value) {
+  if (!value) return "";
+  const [year, month, day] = value.split("-");
+  return shortDate.format(new Date(Number(year), Number(month) - 1, Number(day)));
+}
+
+function periodKey(record) {
+  return `${record.periodStart || ""}|${record.periodEnd || ""}`;
+}
+
+function normalize(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
+function getAccountsForUnit(unitName) {
+  return UNIT_BY_NAME.get(unitName)?.accounts || [];
+}
+
+function statusText(status) {
+  const labels = {
+    revision: "En revision",
+    pagado: "Pagado",
+    pendiente: "Pendiente",
+    observado: "Observado",
+    enviado: "Enviado",
+    recibido: "Recibido",
+    cancelado: "Cancelado"
+  };
+  return labels[status] || status;
+}
+
+function getAreas() {
+  return [...new Set(state.records.map((record) => record.area).filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
+}
+
+function getReportAreas(unitName = "all") {
+  const catalogAreas = CATALOG_ACCOUNTS.filter((item) => unitName === "all" || item.executingUnit === unitName).map((item) => item.area);
+  const recordAreas = state.records.filter((record) => unitName === "all" || record.executingUnit === unitName).map((record) => record.area);
+  return [...new Set([...catalogAreas, ...recordAreas].filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
+}
+
+function catalogAccountKey(account) {
+  return `${account.accountNumber}__${account.area}`;
+}
+
+function getSelectedReceiptAccount() {
+  const accountSelect = $("#accountNumber");
+  const areaSelect = $("#area");
+  const accounts = getAccountsForUnit($("#executingUnit").value);
+  const selected = accounts.find((account) => catalogAccountKey(account) === accountSelect.value);
+  const selectedAccountNumber = selected?.accountNumber || accountSelect.value;
+  return accounts.find((account) => account.accountNumber === selectedAccountNumber && account.area === areaSelect.value) || selected;
+}
+
+function renderReceiptCatalogControls(selectedUnit = $("#executingUnit")?.value, selectedAccount = $("#accountNumber")?.value, selectedArea = $("#area")?.value) {
+  const unitSelect = $("#executingUnit");
+  const accountSelect = $("#accountNumber");
+  const areaSelect = $("#area");
+  if (!unitSelect || !accountSelect || !areaSelect) return;
+
+  const unitName = selectedUnit && UNIT_BY_NAME.has(selectedUnit) ? selectedUnit : EXECUTING_UNITS[0].name;
+  unitSelect.innerHTML = EXECUTING_UNITS.map((unit) => `<option value="${escapeHtml(unit.name)}">${escapeHtml(unit.name)}</option>`).join("");
+  unitSelect.value = unitName;
+
+  const accounts = getAccountsForUnit(unitName);
+  const selectedCatalogAccount =
+    accounts.find((account) => catalogAccountKey(account) === selectedAccount)
+    || accounts.find((account) => account.accountNumber === selectedAccount && (!selectedArea || account.area === selectedArea))
+    || accounts[0];
+  accountSelect.innerHTML = accounts
+    .map((account) => `<option value="${escapeHtml(catalogAccountKey(account))}">${escapeHtml(account.accountNumber)} - ${escapeHtml(account.area)}</option>`)
+    .join("");
+  accountSelect.value = selectedCatalogAccount ? catalogAccountKey(selectedCatalogAccount) : "";
+
+  const matchingAreas = accounts.filter((account) => account.accountNumber === selectedCatalogAccount?.accountNumber);
+  areaSelect.innerHTML = matchingAreas.map((account) => `<option value="${escapeHtml(account.area)}">${escapeHtml(account.area)}</option>`).join("");
+  areaSelect.value = selectedCatalogAccount?.area || matchingAreas[0]?.area || "";
+
+  syncMeterFromCatalog();
+}
+
+function syncMeterFromCatalog() {
+  const account = getSelectedReceiptAccount();
+  if (account) $("#accountNumber").value = catalogAccountKey(account);
+  $("#meterNumber").value = account?.meterNumber || "";
+}
+
+function getRecordAlerts(record) {
+  const alerts = [];
+  const sameUnitAccountMeter = (item) =>
+    normalize(item.executingUnit || "") === normalize(record.executingUnit || "") &&
+    normalize(item.accountNumber) === normalize(record.accountNumber) &&
+    normalize(item.meterNumber || "") === normalize(record.meterNumber || "") &&
+    normalize(item.area || "") === normalize(record.area || "");
+  const sameAccountPeriod = state.records.filter(
+    (item) => item.id !== record.id && sameUnitAccountMeter(item) && periodKey(item) === periodKey(record)
+  );
+  const similarPaid = state.records.filter(
+    (item) =>
+      item.id !== record.id &&
+      sameUnitAccountMeter(item) &&
+      item.status === "pagado" &&
+      record.status !== "pagado" &&
+      Math.abs(Number(item.amount) - Number(record.amount)) <= 1
+  );
+  const accountHistory = state.records
+    .filter((item) => item.id !== record.id && sameUnitAccountMeter(item) && item.periodEnd < record.periodEnd)
+    .sort((a, b) => a.periodEnd.localeCompare(b.periodEnd));
+  const previous = accountHistory.at(-1);
+
+  if (sameAccountPeriod.length) alerts.push("Cuenta y periodo repetidos");
+  if (similarPaid.length) alerts.push("Revisar posible pago previo");
+  if (previous && previous.amount > 0) {
+    const diff = (Number(record.amount) - Number(previous.amount)) / Number(previous.amount);
+    if (Math.abs(diff) >= 0.3) alerts.push(`Variacion ${Math.round(diff * 100)}% vs. cuenta anterior`);
+  }
+  if (record.status === "observado") alerts.push("Tiene observacion");
+  return alerts;
+}
+
+function renderAll() {
+  renderSummary();
+  renderReceiptCatalogControls();
+  renderAreaControls();
+  renderLinkedReceipts(getSelectedLinkedReceiptIds());
+  renderRecords();
+  renderLetters();
+  renderReports();
+  if (window.lucide) lucide.createIcons();
+}
+
+function renderLinkedReceipts(selectedIds = []) {
+  const selected = new Set(selectedIds);
+  const container = $("#linkedReceiptsList");
+  if (!container) return;
+  if (!state.records.length) {
+    container.innerHTML = `<span class="muted">Aun no hay recibos para ligar.</span>`;
+    return;
+  }
+
+  container.innerHTML = state.records
+    .slice()
+    .sort((a, b) => b.periodEnd.localeCompare(a.periodEnd) || a.area.localeCompare(b.area, "es"))
+    .map(
+      (record) => `
+        <label>
+          <input class="linked-receipt" type="checkbox" value="${record.id}" ${selected.has(record.id) ? "checked" : ""} />
+          <span>
+            ${escapeHtml(record.area)} - ${money.format(Number(record.amount || 0))}
+            <small>${escapeHtml(record.executingUnit || "")} | ${escapeHtml(record.accountNumber)} | ${escapeHtml(record.meterNumber || "Sin medidor")} | ${escapeHtml(formatPeriod(record))}</small>
+          </span>
+        </label>
+      `
+    )
+    .join("");
+}
+
+function getSelectedLinkedReceiptIds() {
+  return $$(".linked-receipt:checked").map((input) => input.value);
+}
+
+function renderSummary() {
+  const registered = state.records.reduce((sum, record) => sum + Number(record.amount || 0), 0);
+  const paid = state.records.filter((record) => record.status === "pagado").reduce((sum, record) => sum + Number(record.amount || 0), 0);
+  const pending = state.records.filter((record) => record.status !== "pagado").reduce((sum, record) => sum + Number(record.amount || 0), 0);
+  const alerts = state.records.reduce((sum, record) => sum + getRecordAlerts(record).length, 0);
+
+  $("#totalRegistered").textContent = money.format(registered);
+  $("#totalPaid").textContent = money.format(paid);
+  $("#totalPending").textContent = money.format(pending);
+  $("#totalAlerts").textContent = alerts;
+}
+
+function renderAreaControls() {
+  const selectedUnit = $("#reportUnit")?.value || "all";
+  renderSelect($("#reportUnit"), [["all", "Todas las unidades"], ...EXECUTING_UNITS.map((unit) => [unit.name, unit.name])]);
+  $("#reportUnit").value = selectedUnit && (selectedUnit === "all" || UNIT_BY_NAME.has(selectedUnit)) ? selectedUnit : "all";
+  const areas = getReportAreas($("#reportUnit").value);
+  renderSelect($("#reportArea"), [["all", "Todas las áreas"], ...areas.map((area) => [area, area])]);
+}
+
+function renderSelect(select, options) {
+  const current = select.value || "all";
+  select.innerHTML = options.map(([value, label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`).join("");
+  select.value = options.some(([value]) => value === current) ? current : "all";
+}
+
+function getFilteredRecords() {
+  const query = normalize($("#searchInput").value);
+  const status = $("#statusFilter").value;
+  return state.records
+    .filter((record) => status === "all" || record.status === status)
+    .filter((record) => {
+      const haystack = normalize([record.executingUnit, record.accountNumber, record.meterNumber, record.area, formatPeriod(record), record.amount, record.notes].join(" "));
+      return !query || haystack.includes(query);
+    })
+    .sort((a, b) => b.periodEnd.localeCompare(a.periodEnd) || (a.executingUnit || "").localeCompare(b.executingUnit || "", "es") || a.area.localeCompare(b.area, "es"));
+}
+
+function renderRecords() {
+  const records = getFilteredRecords();
+  $("#recordCount").textContent = `${records.length} ${records.length === 1 ? "registro" : "registros"}`;
+  $("#emptyRecords").classList.toggle("active", !state.records.length);
+  $("#recordsBody").innerHTML = records
+    .map((record, index) => {
+      const alerts = getRecordAlerts(record);
+      return `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${escapeHtml(record.executingUnit || "")}</td>
+          <td><strong>${escapeHtml(record.accountNumber)}</strong></td>
+          <td>${escapeHtml(record.meterNumber || "")}</td>
+          <td>${escapeHtml(formatPeriod(record))}</td>
+          <td>${escapeHtml(record.area)}</td>
+          <td class="amount">${money.format(Number(record.amount || 0))}</td>
+          <td><span class="badge ${record.status}">${statusText(record.status)}</span></td>
+          <td>${renderAlerts(alerts)}</td>
+          <td>${rowActions(record.id, "record")}</td>
+        </tr>
+      `;
+    })
+    .join("");
+}
+
+function renderAlerts(alerts) {
+  if (!alerts.length) return `<span class="muted">Sin alertas</span>`;
+  return `<div class="alert-list">${alerts.map((alert) => `<span class="alert-item"><i data-lucide="triangle-alert"></i>${escapeHtml(alert)}</span>`).join("")}</div>`;
+}
+
+function rowActions(id, type) {
+  return `
+    <div class="row-actions">
+      <button class="icon-button ghost edit-row" type="button" aria-label="Editar" data-tooltip="Editar" data-id="${id}" data-type="${type}"><i data-lucide="pencil"></i></button>
+      <button class="icon-button ghost delete-row" type="button" aria-label="Eliminar" data-tooltip="Eliminar" data-id="${id}" data-type="${type}"><i data-lucide="trash-2"></i></button>
+    </div>
+  `;
+}
+
+function renderLetters() {
+  const query = normalize($("#letterSearch").value);
+  const letters = state.letters
+    .filter((letter) => !query || normalize(Object.values(letter).join(" ")).includes(query))
+    .sort((a, b) => b.letterDate.localeCompare(a.letterDate));
+
+  $("#letterCount").textContent = `${letters.length} ${letters.length === 1 ? "oficio" : "oficios"}`;
+  $("#emptyLetters").classList.toggle("active", !state.letters.length);
+  $("#lettersBody").innerHTML = letters
+    .map(
+      (letter) => `
+        <tr>
+          <td><strong>${escapeHtml(letter.letterNumber)}</strong></td>
+          <td>${formatDate(letter.letterDate)}</td>
+          <td>${escapeHtml(letter.recipient)}</td>
+          <td>${escapeHtml(letter.letterArea || "Sin area")}<br><span class="muted">${escapeHtml(letter.letterPeriod || "Sin periodo")}</span></td>
+          <td class="amount">${money.format(Number(letter.letterAmount || 0))}</td>
+          <td><span class="badge ${letter.letterStatus}">${statusText(letter.letterStatus)}</span></td>
+          <td>${renderPdfActions(letter)}</td>
+          <td>${rowActions(letter.id, "letter")}</td>
+        </tr>
+      `
+    )
+    .join("");
+}
+
+function renderPdfActions(letter) {
+  if (!letter.pdfAttachment?.id) return `<span class="muted">Sin PDF</span>`;
+  return `
+    <div class="document-actions">
+      <button class="icon-button ghost pdf-view" type="button" aria-label="Ver PDF" data-tooltip="Ver PDF" data-id="${letter.id}"><i data-lucide="eye"></i></button>
+      <button class="icon-button ghost pdf-print" type="button" aria-label="Imprimir PDF" data-tooltip="Imprimir PDF" data-id="${letter.id}"><i data-lucide="printer"></i></button>
+    </div>
+  `;
+}
+
+function verifyReceipt(event) {
+  event.preventDefault();
+  const query = {
+    accountNumber: $("#verifyAccount").value.trim(),
+    periodStart: $("#verifyStart").value,
+    periodEnd: $("#verifyEnd").value,
+    amount: Number($("#verifyAmount").value || 0)
+  };
+
+  if (query.periodEnd < query.periodStart) {
+    alert("La fecha final del periodo debe ser posterior a la fecha inicial.");
+    return;
+  }
+
+  const matches = findReceiptMatches(query);
+  renderVerification(matches);
+}
+
+function findReceiptMatches(query) {
+  const amountTolerance = 1;
+  return state.records
+    .map((record) => {
+      const reasons = [];
+      const sameAccount = normalize(record.accountNumber) === normalize(query.accountNumber);
+      const samePeriod = record.periodStart === query.periodStart && record.periodEnd === query.periodEnd;
+      const amountDiff = Math.abs(Number(record.amount || 0) - query.amount);
+      const sameAmount = amountDiff <= amountTolerance;
+      const overlappingPeriod = sameAccount && datesOverlap(query.periodStart, query.periodEnd, record.periodStart, record.periodEnd);
+
+      if (sameAccount && samePeriod && sameAmount) reasons.push("Cuenta, periodo e importe iguales");
+      else {
+        if (sameAccount && samePeriod) reasons.push("Misma cuenta y mismo periodo");
+        if (sameAccount && overlappingPeriod && !samePeriod) reasons.push("Periodo traslapado en la misma cuenta");
+        if (sameAccount && sameAmount && !samePeriod) reasons.push("Misma cuenta con importe igual o muy parecido");
+      }
+
+      let risk = "bajo";
+      if (reasons.some((reason) => reason.includes("iguales"))) risk = "alto";
+      else if (reasons.length) risk = "medio";
+
+      return { record, reasons, risk, amountDiff };
+    })
+    .filter((match) => match.reasons.length)
+    .sort((a, b) => riskWeight(b.risk) - riskWeight(a.risk) || a.amountDiff - b.amountDiff || b.record.periodEnd.localeCompare(a.record.periodEnd));
+}
+
+function datesOverlap(startA, endA, startB, endB) {
+  return startA <= endB && startB <= endA;
+}
+
+function riskWeight(risk) {
+  return { alto: 3, medio: 2, bajo: 1 }[risk] || 0;
+}
+
+function renderVerification(matches) {
+  const result = $("#verificationResult");
+  result.classList.remove("danger", "warn", "ok");
+
+  if (!matches.length) {
+    result.classList.add("ok");
+    result.innerHTML = `
+      <i data-lucide="circle-check"></i>
+      <strong>Sin coincidencias</strong>
+      <span>No se encontro un recibo capturado con esos datos o con una coincidencia sospechosa.</span>
+    `;
+  } else {
+    const highRisk = matches.some((match) => match.risk === "alto");
+    result.classList.add(highRisk ? "danger" : "warn");
+    result.innerHTML = `
+      <i data-lucide="${highRisk ? "triangle-alert" : "search"}"></i>
+      <strong>${matches.length} posible${matches.length === 1 ? "" : "s"} coincidencia${matches.length === 1 ? "" : "s"}</strong>
+      <span>${highRisk ? "Hay un registro que parece ser el mismo recibo." : "Hay registros parecidos que conviene revisar antes de capturar."}</span>
+    `;
+  }
+
+  $("#verificationBody").innerHTML = matches
+    .map(
+      ({ record, reasons, risk }) => `
+        <tr>
+          <td><span class="badge ${risk === "alto" ? "observado" : "pendiente"}">${risk === "alto" ? "Alto" : "Medio"}</span></td>
+          <td><strong>${escapeHtml(record.accountNumber)}</strong></td>
+          <td>${escapeHtml(formatPeriod(record))}</td>
+          <td>${escapeHtml(record.executingUnit || "")}<br><span class="muted">${escapeHtml(record.area)}</span></td>
+          <td class="amount">${money.format(Number(record.amount || 0))}</td>
+          <td><span class="badge ${record.status}">${statusText(record.status)}</span></td>
+          <td>${reasons.map((reason) => escapeHtml(reason)).join("<br>")}</td>
+          <td>${rowActions(record.id, "record")}</td>
+        </tr>
+      `
+    )
+    .join("");
+
+  if (window.lucide) lucide.createIcons();
+}
+
+function fillVerifierFromReceiptForm() {
+  $("#verifyAccount").value = getSelectedReceiptAccount()?.accountNumber || $("#accountNumber").value;
+  $("#verifyStart").value = $("#periodStart").value;
+  $("#verifyEnd").value = $("#periodEnd").value;
+  $("#verifyAmount").value = $("#amount").value;
+}
+
+function getReportRecords() {
+  const unit = $("#reportUnit").value || "all";
+  const area = $("#reportArea").value || "all";
+  const from = $("#reportFrom").value;
+  const to = $("#reportTo").value;
+  const status = $("#reportStatus").value;
+  return state.records
+    .filter((record) => unit === "all" || record.executingUnit === unit)
+    .filter((record) => area === "all" || record.area === area)
+    .filter((record) => status === "all" || record.status === status)
+    .filter((record) => !from || record.periodEnd >= from)
+    .filter((record) => !to || record.periodStart <= to)
+    .sort((a, b) => (a.executingUnit || "").localeCompare(b.executingUnit || "", "es") || a.area.localeCompare(b.area, "es") || a.periodEnd.localeCompare(b.periodEnd));
+}
+
+function renderReports() {
+  const records = getReportRecords();
+  $("#reportTotal").textContent = money.format(records.reduce((sum, record) => sum + Number(record.amount || 0), 0));
+  $("#reportBody").innerHTML = records
+    .map(
+      (record) => `
+        <tr>
+          <td>${escapeHtml(record.accountNumber)}</td>
+          <td>${escapeHtml(record.executingUnit || "")}</td>
+          <td>${escapeHtml(record.meterNumber || "")}</td>
+          <td>${escapeHtml(formatPeriod(record))}</td>
+          <td>${escapeHtml(record.area)}</td>
+          <td class="amount">${money.format(Number(record.amount || 0))}</td>
+          <td><span class="badge ${record.status}">${statusText(record.status)}</span></td>
+          <td>${escapeHtml(record.supportLocation || "Sin soporte registrado")}</td>
+        </tr>
+      `
+    )
+    .join("");
+}
+
+function saveReceipt(event) {
+  event.preventDefault();
+  const id = $("#receiptId").value || crypto.randomUUID();
+  const existingIndex = state.records.findIndex((record) => record.id === id);
+  const selectedAccount = getSelectedReceiptAccount();
+  const record = {
+    id,
+    executingUnit: $("#executingUnit").value,
+    accountNumber: selectedAccount?.accountNumber || $("#accountNumber").value.trim(),
+    meterNumber: $("#meterNumber").value.trim(),
+    periodStart: $("#periodStart").value,
+    periodEnd: $("#periodEnd").value,
+    area: selectedAccount?.area || $("#area").value.trim(),
+    amount: Number($("#amount").value || 0),
+    status: $("#status").value,
+    paymentDate: $("#paymentDate").value,
+    paymentReference: $("#paymentReference").value.trim(),
+    supportLocation: $("#supportLocation").value.trim(),
+    notes: $("#notes").value.trim(),
+    createdAt: existingIndex >= 0 ? state.records[existingIndex].createdAt : new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  if (record.periodEnd < record.periodStart) {
+    alert("La fecha final del periodo debe ser posterior a la fecha inicial.");
+    return;
+  }
+
+  if (existingIndex >= 0) state.records[existingIndex] = record;
+  else state.records.unshift(record);
+
+  persist();
+  resetReceiptForm();
+  renderAll();
+}
+
+async function saveLetter(event) {
+  event.preventDefault();
+  const id = $("#letterId").value || crypto.randomUUID();
+  const existingIndex = state.letters.findIndex((letter) => letter.id === id);
+  const existing = existingIndex >= 0 ? state.letters[existingIndex] : null;
+  let pdfAttachment = pendingPdfRemoval ? null : existing?.pdfAttachment || null;
+  const file = $("#letterPdf").files[0];
+
+  try {
+    if (pendingPdfRemoval && existing?.pdfAttachment?.id) {
+      await deletePdfAttachment(existing.pdfAttachment.id);
+    }
+    if (file) {
+      pdfAttachment = await savePdfAttachment(file, existing?.pdfAttachment?.id || "");
+    }
+  } catch (error) {
+    alert(error.message || "No se pudo guardar el PDF.");
+    return;
+  }
+
+  const letter = {
+    id,
+    letterNumber: $("#letterNumber").value.trim(),
+    letterDate: $("#letterDate").value,
+    recipient: $("#recipient").value.trim(),
+    letterArea: $("#letterArea").value.trim(),
+    letterPeriod: $("#letterPeriod").value.trim(),
+    linkedRecordIds: getSelectedLinkedReceiptIds(),
+    letterAmount: Number($("#letterAmount").value || 0),
+    letterStatus: $("#letterStatus").value,
+    letterSupport: $("#letterSupport").value.trim(),
+    letterNotes: $("#letterNotes").value.trim(),
+    pdfAttachment,
+    createdAt: existingIndex >= 0 ? state.letters[existingIndex].createdAt : new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  if (existingIndex >= 0) state.letters[existingIndex] = letter;
+  else state.letters.unshift(letter);
+
+  persist();
+  resetLetterForm();
+  renderAll();
+}
+
+function editRecord(id) {
+  const record = state.records.find((item) => item.id === id);
+  if (!record) return;
+  $("#formTitle").textContent = "Editar recibo";
+  $("#receiptId").value = record.id;
+  renderReceiptCatalogControls(record.executingUnit, record.accountNumber, record.area);
+  $("#meterNumber").value = record.meterNumber || $("#meterNumber").value;
+  $("#periodStart").value = record.periodStart;
+  $("#periodEnd").value = record.periodEnd;
+  $("#amount").value = record.amount;
+  $("#status").value = record.status;
+  $("#paymentDate").value = record.paymentDate || "";
+  $("#paymentReference").value = record.paymentReference || "";
+  $("#supportLocation").value = record.supportLocation || "";
+  $("#notes").value = record.notes || "";
+  showView("recordsView");
+  $("#executingUnit").focus();
+}
+
+function editLetter(id) {
+  const letter = state.letters.find((item) => item.id === id);
+  if (!letter) return;
+  $("#letterFormTitle").textContent = "Editar oficio";
+  $("#letterId").value = letter.id;
+  $("#letterNumber").value = letter.letterNumber;
+  $("#letterDate").value = letter.letterDate;
+  $("#recipient").value = letter.recipient;
+  $("#letterArea").value = letter.letterArea || "";
+  $("#letterPeriod").value = letter.letterPeriod || "";
+  renderLinkedReceipts(letter.linkedRecordIds || []);
+  $("#letterAmount").value = letter.letterAmount || "";
+  $("#letterStatus").value = letter.letterStatus || "enviado";
+  $("#letterSupport").value = letter.letterSupport || "";
+  $("#letterNotes").value = letter.letterNotes || "";
+  pendingPdfRemoval = false;
+  renderPdfStatus(letter.pdfAttachment || null);
+  showView("lettersView");
+  $("#letterNumber").focus();
+}
+
+async function deleteItem(id, type) {
+  const message = type === "record" ? "Eliminar este recibo del control?" : "Eliminar este oficio del control?";
+  if (!confirm(message)) return;
+  if (type === "record") state.records = state.records.filter((record) => record.id !== id);
+  else {
+    const letter = state.letters.find((item) => item.id === id);
+    if (letter?.pdfAttachment?.id) await deletePdfAttachment(letter.pdfAttachment.id);
+    state.letters = state.letters.filter((item) => item.id !== id);
+  }
+  persist();
+  renderAll();
+}
+
+function resetReceiptForm() {
+  $("#receiptForm").reset();
+  ["receiptId", "periodStart", "periodEnd", "amount", "paymentDate", "paymentReference", "supportLocation", "notes"].forEach((id) => {
+    $(`#${id}`).value = "";
+  });
+  $("#formTitle").textContent = "Nuevo recibo";
+  $("#status").value = "revision";
+  renderReceiptCatalogControls(EXECUTING_UNITS[0].name);
+}
+
+function resetLetterForm() {
+  $("#letterForm").reset();
+  ["letterId", "letterNumber", "letterDate", "recipient", "letterArea", "letterPeriod", "letterAmount", "letterSupport", "letterNotes"].forEach((id) => {
+    $(`#${id}`).value = "";
+  });
+  $("#letterPdf").value = "";
+  $("#letterFormTitle").textContent = "Nuevo oficio";
+  $("#letterStatus").value = "enviado";
+  pendingPdfRemoval = false;
+  renderPdfStatus(null);
+  renderLinkedReceipts([]);
+}
+
+function showView(viewId) {
+  $$(".view").forEach((view) => view.classList.toggle("active", view.id === viewId));
+  $$(".tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.view === viewId));
+  renderAll();
+}
+
+function download(filename, content, type = "text/plain;charset=utf-8") {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1200);
+}
+
+function renderPdfStatus(pdfAttachment) {
+  const status = $("#letterPdfStatus");
+  if (!status) return;
+  if (!pdfAttachment || pendingPdfRemoval) {
+    status.classList.remove("active");
+    status.innerHTML = "";
+    return;
+  }
+
+  status.classList.add("active");
+  status.innerHTML = `
+    <i data-lucide="file-text"></i>
+    <span>${escapeHtml(pdfAttachment.name)} (${formatBytes(pdfAttachment.size)})</span>
+    <button class="text-button" id="removePdfBtn" type="button">Quitar</button>
+  `;
+  if (window.lucide) lucide.createIcons();
+}
+
+function formatBytes(bytes = 0) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+async function openLetterPdf(letterId, shouldPrint = false) {
+  const letter = state.letters.find((item) => item.id === letterId);
+  if (!letter?.pdfAttachment?.id) return;
+  const attachment = await getPdfAttachment(letter.pdfAttachment.id);
+  if (!attachment?.blob && !attachment?.dataUrl) {
+    alert("No se encontro el PDF guardado. Puede haberse limpiado el almacenamiento del navegador.");
+    return;
+  }
+  const url = attachment.blob ? URL.createObjectURL(attachment.blob) : attachment.dataUrl;
+  const viewer = window.open(url, "_blank");
+  if (!viewer) {
+    alert("El navegador bloqueo la ventana del PDF. Permite ventanas emergentes para esta herramienta.");
+    if (attachment.blob) URL.revokeObjectURL(url);
+    return;
+  }
+  if (shouldPrint) {
+    viewer.addEventListener("load", () => viewer.print(), { once: true });
+  }
+  if (attachment.blob) setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+function suggestLinkedReceipts() {
+  const area = normalize($("#letterArea").value);
+  const period = normalize($("#letterPeriod").value);
+  const matches = state.records.filter((record) => {
+    const areaMatches = !area || normalize(record.area).includes(area) || area.includes(normalize(record.area));
+    const periodMatches = !period || normalize(formatPeriod(record)).includes(period) || period.includes(normalize(formatPeriod(record)));
+    return areaMatches && periodMatches;
+  });
+  renderLinkedReceipts(matches.map((record) => record.id));
+  if (matches.length) {
+    $("#letterAmount").value = matches.reduce((sum, record) => sum + Number(record.amount || 0), 0).toFixed(2);
+  }
+}
+
+function exportJson() {
+  download(`respaldo-energia-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(state, null, 2), "application/json;charset=utf-8");
+}
+
+function importJson(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      if (!Array.isArray(parsed.records) || !Array.isArray(parsed.letters)) throw new Error("Formato no valido");
+      state.records = parsed.records.map(hydrateRecord);
+      state.letters = parsed.letters;
+      persist();
+      renderAll();
+    } catch {
+      alert("No se pudo importar el respaldo. Revisa que sea un archivo JSON generado por esta herramienta.");
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = "";
+}
+
+function downloadCsv() {
+  const rows = getReportRecords();
+  const header = ["Unidad ejecutora", "Cuenta", "Medidor", "Periodo inicio", "Periodo fin", "Area", "Importe", "Estatus", "Fecha pago", "Referencia", "Soporte", "Observaciones"];
+  const body = rows.map((record) => [
+    record.executingUnit || "",
+    record.accountNumber,
+    record.meterNumber || "",
+    record.periodStart,
+    record.periodEnd,
+    record.area,
+    record.amount,
+    statusText(record.status),
+    record.paymentDate || "",
+    record.paymentReference || "",
+    record.supportLocation || "",
+    record.notes || ""
+  ]);
+  const csv = [header, ...body].map((row) => row.map(csvCell).join(",")).join("\n");
+  download(`reporte-energia-${new Date().toISOString().slice(0, 10)}.csv`, csv, "text/csv;charset=utf-8");
+}
+
+function csvCell(value) {
+  return `"${String(value ?? "").replaceAll('"', '""')}"`;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function bindEvents() {
+  $("#receiptForm").addEventListener("submit", saveReceipt);
+  $("#letterForm").addEventListener("submit", saveLetter);
+  $("#executingUnit").addEventListener("change", () => renderReceiptCatalogControls($("#executingUnit").value));
+  $("#accountNumber").addEventListener("change", () => renderReceiptCatalogControls($("#executingUnit").value, $("#accountNumber").value));
+  $("#area").addEventListener("change", syncMeterFromCatalog);
+  $("#clearFormBtn").addEventListener("click", resetReceiptForm);
+  $("#clearLetterBtn").addEventListener("click", resetLetterForm);
+  $("#newReceiptBtn").addEventListener("click", () => {
+    showView("recordsView");
+    resetReceiptForm();
+    $("#executingUnit").focus();
+  });
+  $("#emptyNewBtn").addEventListener("click", () => $("#executingUnit").focus());
+  $$(".tab").forEach((tab) => tab.addEventListener("click", () => showView(tab.dataset.view)));
+  ["searchInput", "statusFilter", "letterSearch", "reportArea", "reportFrom", "reportTo", "reportStatus"].forEach((id) => {
+    $(`#${id}`).addEventListener("input", renderAll);
+  });
+  $("#reportUnit").addEventListener("input", () => {
+    $("#reportArea").value = "all";
+    renderAll();
+  });
+  $("#verifyForm").addEventListener("submit", verifyReceipt);
+  $("#useReceiptFormBtn").addEventListener("click", fillVerifierFromReceiptForm);
+  $("#exportJsonBtn").addEventListener("click", exportJson);
+  $("#importJsonInput").addEventListener("change", importJson);
+  $("#downloadCsvBtn").addEventListener("click", downloadCsv);
+  $("#printReportBtn").addEventListener("click", () => window.print());
+  $("#suggestLinksBtn").addEventListener("click", suggestLinkedReceipts);
+  $("#letterPdf").addEventListener("change", () => {
+    const file = $("#letterPdf").files[0];
+    pendingPdfRemoval = false;
+    renderPdfStatus(file ? { name: file.name, size: file.size } : null);
+  });
+  $("#letterPdfStatus").addEventListener("click", (event) => {
+    if (!event.target.closest("#removePdfBtn")) return;
+    pendingPdfRemoval = true;
+    $("#letterPdf").value = "";
+    renderPdfStatus(null);
+  });
+  document.addEventListener("click", (event) => {
+    const edit = event.target.closest(".edit-row");
+    const del = event.target.closest(".delete-row");
+    const pdfView = event.target.closest(".pdf-view");
+    const pdfPrint = event.target.closest(".pdf-print");
+    if (edit) {
+      edit.dataset.type === "record" ? editRecord(edit.dataset.id) : editLetter(edit.dataset.id);
+    }
+    if (del) deleteItem(del.dataset.id, del.dataset.type);
+    if (pdfView) openLetterPdf(pdfView.dataset.id, false);
+    if (pdfPrint) openLetterPdf(pdfPrint.dataset.id, true);
+  });
+}
+
+bindEvents();
+resetReceiptForm();
+resetLetterForm();
+renderAll();
+})();
+    </script>
   </body>
 </html>
+
